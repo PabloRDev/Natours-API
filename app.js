@@ -7,6 +7,7 @@ const mongoSanitize = require('express-mongo-sanitize')
 const xss = require('xss-clean')
 const hpp = require('hpp')
 const compression = require('compression')
+const cors = require('cors')
 
 const globalErrorHandler = require('./controllers/errorController')
 
@@ -41,13 +42,16 @@ app.use(hpp({
     'price'
   ]
 }))
+app.use(compression())
 app.use('/api', limiterAPICalls)
-
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString()
 
   next()
 })
+app.use(cors())
+app.options('*', cors())
+app.enable('trust proxy') // Allow secure HTTPS connections from Heroku for Express
 
 app.use('/api/v1/tours', tourRouter)
 app.use('/api/v1/users', userRouter)
@@ -59,7 +63,5 @@ app.all('*', (req, res, next) => {
 })
 
 app.use(globalErrorHandler)
-app.use(compression())
-app.enable('trust proxy') // Allow secure HTTPS connections from Heroku for Express
 
 module.exports = app
