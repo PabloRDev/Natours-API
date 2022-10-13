@@ -2,13 +2,14 @@
   "name": "natours",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "default": "index.js",
   "scripts": {
     "start": "node server.js",
     "dev": "standard --fix && nodemon server.js",
     "dev:prod": "NODE_ENV=production nodemon server.js",
     "lint": "standard --fix",
-    "debug": "ndb server.js"
+    "debug": "ndb server.js",
+    "build": "parcel build app.js  --dist-dir ./dist"
   },
   "keywords": [],
   "author": "",
@@ -28,6 +29,7 @@
     "morgan": "1.10.0",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.8.0",
+    "parcel": "^2.7.0",
     "sharp": "^0.31.1",
     "slugify": "^1.6.5",
     "stripe": "^10.13.0",
