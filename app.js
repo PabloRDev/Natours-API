@@ -49,9 +49,9 @@ app.use((req, res, next) => {
   next()
 })
 
-app.use('/', (req, res, next) => {
-  res.redirect('/api/v1/tours')
-})
+// app.use('/', (req, res, next) => {
+//   res.redirect('/api/v1/tours')
+// })
 app.use('/api/v1/tours', tourRouter)
 app.use('/api/v1/users', userRouter)
 app.use('/api/v1/reviews', reviewRouter)
