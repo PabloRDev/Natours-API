@@ -53,6 +53,11 @@ app.use(cors())
 app.options('*', cors())
 app.enable('trust proxy') // Allow secure HTTPS connections from Heroku for Express
 
+// app.post(
+//   '/webhook-checkout',
+//   express.raw({ type: 'application/json' }),
+//   webhookCheckout
+// )
 app.use('/api/v1/tours', tourRouter)
 app.use('/api/v1/users', userRouter)
 app.use('/api/v1/reviews', reviewRouter)
