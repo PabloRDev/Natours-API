@@ -4,7 +4,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start": "standard --fix && nodemon server.js",
+    "start": "node server.js",
+    "dev": "standard --fix && nodemon server.js",
     "start:prod": "NODE_ENV=production nodemon server.js",
     "lint": "standard --fix",
     "debug": "ndb server.js"
@@ -38,5 +39,8 @@
   },
   "eslintConfig": {
     "extends": "./node_modules/standard/eslintrc.json"
+  },
+  "engines": {
+    "node": "14.0.0"
   }
 }
