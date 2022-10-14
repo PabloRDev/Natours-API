@@ -26,13 +26,12 @@ const limiterAPICalls = rateLimit({
   message: 'Too many requests from this IP, please try again in an hour!'
 })
 
-app.use(helmet())
-process.env.NODE_ENV === 'development' && app.use(morgan('dev'))
+app.use(helmet()) // Security headers
+process.env.NODE_ENV === 'development' && app.use(morgan('dev')) // Color logging
 app.use(express.json({ limit: '10kb' }))
-// app.use(express.static(`${__dirname}/public`))
-app.use(mongoSanitize())
-app.use(xss())
-app.use(hpp({
+app.use(mongoSanitize()) // Sanitize inputs against query selector injection attacks
+app.use(xss()) // Filter input from users to prevent XSS attacks
+app.use(hpp({ // Protect against HTTP Parameter Pollution attacks
   whitelist: [
     'duration',
     'ratingsQuantity',
@@ -42,28 +41,25 @@ app.use(hpp({
     'price'
   ]
 }))
-app.use(compression())
+app.use(compression()) // Compress responses sent to users
 app.use('/api', limiterAPICalls)
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString()
 
   next()
 })
-app.use(cors())
+app.use(cors()) // Cross-origin resource sharing
 app.options('*', cors())
 app.enable('trust proxy') // Allow secure HTTPS connections from Heroku for Express
 
-// app.post(
-//   '/webhook-checkout',
-//   express.raw({ type: 'application/json' }),
-//   webhookCheckout
-// )
+// ROUTES
+
 app.use('/api/v1/tours', tourRouter)
 app.use('/api/v1/users', userRouter)
 app.use('/api/v1/reviews', reviewRouter)
 app.use('/api/v1/bookings', bookingRouter)
 
-app.all('*', (req, res, next) => {
+app.all('*', (req, res, next) => { // All routes except those defined above
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404))
 })
 
