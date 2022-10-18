@@ -56,6 +56,8 @@ const userSchema = new mongoose.Schema({
   }
 })
 
+userSchema.index({ active: 1 })
+
 userSchema.pre('save', async function (next) { // Bcrypt the password
   if (!this.isModified('password')) return next() // Mongooose middleware
 

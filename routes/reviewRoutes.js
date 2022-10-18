@@ -6,7 +6,8 @@ const {
   deleteReview,
   updateReview,
   setTourUserIds,
-  getReview
+  getReview,
+  getMyReviews
 } = require('../controllers/reviewController')
 const {
   protectRoute,
@@ -19,12 +20,14 @@ const router = express.Router({
 
 router.use(protectRoute)
 
+router.get('/me', getMyReviews)
+
 router.route('/')
   .get(getAllReviews)
   .post(restrictTo('user'), setTourUserIds, createReview)
 
 router.route('/:id')
-  .get(getReview)
+  .get(restrictTo('admin'), getReview)
   .patch(restrictTo('user', 'admin'), updateReview)
   .delete(restrictTo('user', 'admin'), deleteReview)
 
