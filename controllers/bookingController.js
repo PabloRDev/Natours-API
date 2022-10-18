@@ -5,7 +5,6 @@ const catchAsync = require('../utils/catchAsync')
 const AppError = require('../utils/appError')
 const Booking = require('../models/bookingModel')
 const factory = require('./handlerFactory')
-const User = require('../models/userModel')
 
 exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   const tour = await Tour.findById(req.params.tourId)
@@ -41,35 +40,6 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     status: 'success',
     session
   })
-})
-
-exports.webhookCheckout = (req, res, next) => {
-  const signature = req.headers['stripe-signature']
-  let event
-
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET
-    )
-  } catch (err) {
-    return res.status(400).send(`Webhook error: ${err.message}`)
-  }
-
-  if (event.type === 'checkout.session.completed') {
-    createBookingCheckout(event.data.object)
-  }
-
-  res.status(200).json({ received: true })
-}
-
-const createBookingCheckout = catchAsync(async session => {
-  const tour = session.client_reference_id
-  const user = (await User.findOne({ email: session.customer_email })).id
-  const price = session.amount_total / 100
-
-  await Booking.create({ tour, user, price })
 })
 
 exports.getAllBookings = factory.getAll(Booking)

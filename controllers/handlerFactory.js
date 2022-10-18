@@ -3,15 +3,15 @@ const AppError = require('./../utils/appError')
 const APIFeatures = require('../utils/apiFeatures')
 
 exports.getAll = Model => catchAsync(async (req, res, next) => {
-  // To allow for nested GET reviews on tour (hack)
+  // Get reviews for a specific tour
   let filter = {}
   if (req.params.id) filter = { tour: req.params.id }
 
   const features = new APIFeatures(Model.find(filter), req.query)
-    .filter()
-    .sort()
-    .limitFields()
-    .paginate()
+    .filter() // duration[gte]=5
+    .sort() // sort=-price
+    .limitFields() // fields=name,price,duration
+    .paginate() // page=2&limit=10
 
   const data = await features.query
 
@@ -22,9 +22,9 @@ exports.getAll = Model => catchAsync(async (req, res, next) => {
   })
 })
 
-exports.getOne = (Model, popOptions) => catchAsync(async (req, res, next) => {
+exports.getOne = (Model, populateProps) => catchAsync(async (req, res, next) => {
   let query = Model.findById(req.params.id)
-  if (popOptions) query = query.populate(popOptions)
+  if (populateProps) query = query.populate(populateProps)
 
   const data = await query
   if (!data) return next(new AppError('No document found with that ID', 404))
@@ -45,31 +45,27 @@ exports.createOne = Model => catchAsync(async (req, res, next) => {
 })
 
 exports.updateOne = Model => catchAsync(async (req, res, next) => {
-  const updatedData = await Model.findByIdAndUpdate(req.params.id, req.body, {
+  const newData = await Model.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true
   })
-
-  if (!updatedData) {
-    return next(new AppError('No document found with that ID', 404))
-  }
+  if (!newData) return next(new AppError('No document found with that ID', 404))
 
   res.status(200).json({
     status: 'success',
-    updatedData
+    document: newData
   })
 })
 
 exports.deleteOne = Model => catchAsync(async (req, res, next) => {
-  const deletedDoc = await Model.findByIdAndDelete(req.params.id)
-
-  if (!deletedDoc) {
+  const targetDoc = await Model.findByIdAndDelete(req.params.id)
+  if (!targetDoc) {
     return next(new AppError('No document found with that ID', 404))
   }
 
   res.status(204).json({
     status: 'success',
     message: 'Deleted document',
-    deletedDoc
+    deletedDoc: targetDoc
   })
 })

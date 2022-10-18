@@ -5,7 +5,7 @@ const AppError = require('../utils/appError')
 const Tour = require('./../models/tourModel')
 const catchAsync = require('./../utils/catchAsync')
 const factory = require('./handlerFactory')
-// Multer configuration
+// Multer configuration -> upload images
 const multerStorage = multer.memoryStorage()
 const multerFilter = (req, file, cb) => {
   file.mimetype.startsWith('image')
@@ -22,19 +22,18 @@ exports.deleteTour = factory.deleteOne(Tour)
 
 exports.getToursWithin = catchAsync(async (req, res, next) => {
   const { distance, latlng, unit } = req.params
-  const [lat, lng] = latlng.split(',')
-  const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1
-  // radius is in radians
+  const [lat, lng] = latlng.split(',') // latlng format -> 34.111745,-118.113491
+  if (!lat || !lng) next(new AppError('Please, provide latitute and longitude in format "lat,lng".', 400))
+  if (!distance || !latlng || !unit) next(new AppError('Please, provide distance, coordenates and unit', 400))
 
-  if (!lat || !lng) {
-    next(new AppError('Please provide latitute and longitude in format "lat,lng".', 400))
-  }
+  const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1 // Earth's radius in miles or kilometers
+  if (unit !== 'mi' && unit !== 'km') next(new AppError('Please, provide a valid unit: mi (miles) or km (kilometers)', 400))
 
   const tours = await Tour.find({
     startLocation: {
       $geoWithin: {
         $centerSphere:
-          // mongodb reverse lat and lng in order to this to work RIGHT
+          // mongodb reverse lat and lng order
           [[lng, lat], radius]
       }
     }
@@ -51,19 +50,21 @@ exports.getToursWithin = catchAsync(async (req, res, next) => {
 
 exports.getToursDistance = catchAsync(async (req, res, next) => {
   const { latlng, unit } = req.params
-  const [lat, lng] = latlng.split(',')
-
-  if (!lat || !lng) {
-    next(new AppError('Please provide latitute and longitude in format "lat,lng".', 400))
-  }
+  const [lat, lng] = latlng.split(',') // latlng format -> 34.111745,-118.113491
+  if (!lat || !lng) next(new AppError('Please provide latitute and longitude in format "lat,lng".', 400))
 
   let multiplier
-  if (unit === 'km') {
-    multiplier = 0.001
-  } else if (unit === 'mi') {
-    multiplier = 0.000621371
-  } else {
-    next(new AppError('Unit must be "mi" or "km".', 400))
+  switch (unit) {
+    case 'mi':
+      multiplier = 0.000621371
+      break
+    case 'km':
+      multiplier = 0.001
+      break
+
+    default:
+      next(new AppError('Please, provide a valid unit: mi (miles) or km (kilometers)', 400))
+      break
   }
 
   const distances = await Tour.aggregate([
@@ -89,15 +90,16 @@ exports.getToursDistance = catchAsync(async (req, res, next) => {
     status: 'success',
     results: distances.length,
     data: {
-      distances // meters by default
+      distances // Miles or kilometers, based on unit
     }
   })
 })
 
-exports.aliasTopTours = (req, res, next) => {
+exports.aliasTopTours = (req, res, next) => { // APIFeatures + especific query
   req.query.limit = '5'
   req.query.sort = '-ratingsAverage,price'
   req.query.fields = 'name,price,ratingsAverage,summary,difficulty'
+
   next()
 }
 
@@ -186,7 +188,6 @@ exports.resizeTourImages = catchAsync(async (req, res, next) => {
 
   // 1) Cover Image
   req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg`
-
   await sharp(req.files.imageCover[0].buffer)
     .resize(2000, 1333)
     .toFormat('jpeg')

@@ -7,7 +7,10 @@ const {
   updateBooking,
   getBooking
 } = require('../controllers/bookingController')
-const { protectRoute, restrictTo } = require('../controllers/authController')
+const {
+  protectRoute,
+  restrictTo
+} = require('../controllers/authController')
 
 const router = express.Router()
 
@@ -20,6 +23,7 @@ router.use(restrictTo('admin', 'lead-guide'))
 router.route('/')
   .get(getAllBookings)
   .post(createBooking)
+
 router.route('/:id')
   .get(getBooking)
   .patch(updateBooking)

@@ -27,15 +27,17 @@ const sendErrorProd = (err, res) => {
   }
 }
 
+// PRODUCTION HANDLERS
+
 const handleCastErrorDB = err => {
   const message = `Invalid ${err.path}: ${err.value}`
 
   return new AppError(message, 400)
 }
 
-const handleDuplicateFieldsDB = err => {
+const handleDuplicatedFieldsDB = err => {
   const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0]
-  const message = `Duplicate field value: ${value}. Please use another value!`
+  const message = `Duplicated field value: ${value}. Please use another value!`
 
   return new AppError(message, 400)
 }
@@ -48,11 +50,9 @@ const handleValidationErrorDB = err => {
   return new AppError(message, 400)
 }
 
-const handleJWTError = () =>
-  new AppError('Invalid token. Please log in again!', 401)
+const handleJWTError = () => new AppError('Invalid token. Please log in again!', 401)
 
-const handleJWTExpiredError = () =>
-  new AppError('Your token has expired! Please log in again.', 401)
+const handleJWTExpiredError = () => new AppError('Your token has expired. Please log in again', 401)
 
 module.exports = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500
@@ -64,10 +64,10 @@ module.exports = (err, req, res, next) => {
     let error = { ...err }
 
     switch (error.name) {
-      case 'CastError':
+      case 'CastError': // Mongoose failed to cast a value
         error = handleCastErrorDB(error)
         break
-      case 'ValidationError':
+      case 'ValidationError': // Schema failed validation
         error = handleValidationErrorDB(error)
         break
       case 'JsonWebTokenError':
@@ -81,7 +81,7 @@ module.exports = (err, req, res, next) => {
         break
     }
 
-    if (error.code === 11000) error = handleDuplicateFieldsDB(error)
+    if (error.code === 11000) error = handleDuplicatedFieldsDB(error)
 
     sendErrorProd(error, res)
   }

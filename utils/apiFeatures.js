@@ -42,7 +42,7 @@ class APIFeatures {
   paginate () {
     const page = +this.queryString.page || 1
     const limit = +this.queryString.limit || 100
-    const skip = (page - 1) * limit
+    const skip = (page - 1) * limit // Example: skip 10 results if on page 2
 
     this.query = this.query.skip(skip).limit(limit)
 

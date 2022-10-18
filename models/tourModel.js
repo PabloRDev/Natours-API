@@ -110,10 +110,9 @@ const tourSchema = new mongoose.Schema({
 
   ]
 }, {
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
-}
-)
+  toJSON: { virtuals: true }, // Include virtuals in JSON output
+  toObject: { virtuals: true } // Include virtuals in Object output (e.g. console.log)
+})
 
 tourSchema.index({
   price: 1,
@@ -132,20 +131,20 @@ tourSchema.virtual('reviews', {
   localField: '_id'
 })
 // Runs before .save() and .create()
-tourSchema.pre('save', function (next) {
+tourSchema.pre('save', function (next) { // Slugify name
   this.slug = slugify(this.name, { lower: true })
 
   next()
 })
 
-tourSchema.pre(/^find/, function (next) {
+tourSchema.pre(/^find/, function (next) { // Not show secret tours
   this.find({ secretTour: { $ne: true } })
-
   this.start = Date.now()
+
   next()
 })
 
-tourSchema.pre(/^find/, function (next) {
+tourSchema.pre(/^find/, function (next) { // Populate guides
   this.populate({
     path: 'guides',
     select: '-__v -passwordChangedAt'

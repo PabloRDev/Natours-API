@@ -32,7 +32,7 @@ const reviewSchema = new mongoose.Schema({
 
 reviewSchema.index({ tour: 1, user: 1 }, { unique: true })
 
-reviewSchema.post('save', function () {
+reviewSchema.post('save', function () { // Calculate average rating on constructor
   this.constructor.calcAverageRatings(this.tour)
 })
 
@@ -42,16 +42,15 @@ reviewSchema.pre(/^findOneAnd/, async function (next) {
   next()
 })
 
-reviewSchema.post(/^findOneAnd/, async function () {
+reviewSchema.post(/^findOneAnd/, async function () { // Calculate average rating on review
   await this.review.constructor.calcAverageRatings(this.review.tour)
 })
 
-reviewSchema.pre(/^find/, function (next) {
-  this
-    .populate({
-      path: 'user',
-      select: 'name photo'
-    })
+reviewSchema.pre(/^find/, function (next) { // Populate user and tour
+  this.populate({
+    path: 'user',
+    select: 'name photo'
+  })
 
   next()
 })
